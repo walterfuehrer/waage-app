@@ -1,7 +1,14 @@
-import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { BleManager, Device } from 'react-native-ble-plx';
+import { Stack } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from "react-native";
+import { BleManager, Device } from "react-native-ble-plx";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const manager = new BleManager();
 
@@ -11,7 +18,7 @@ export default function BluetoothScreen() {
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
-      if (state === 'PoweredOn') {
+      if (state === "PoweredOn") {
         // Bluetooth ist eingeschaltet
       }
     }, true);
@@ -54,40 +61,50 @@ export default function BluetoothScreen() {
   const connectToDevice = async (device: Device) => {
     try {
       const connectedDevice = await device.connect();
-      Alert.alert('Verbunden', `Erfolgreich verbunden mit ${device.name || device.id}`);
+      Alert.alert(
+        "Verbunden",
+        `Erfolgreich verbunden mit ${device.name || device.id}`
+      );
       // Hier können wir später die Daten von der Waage auslesen
     } catch (error) {
       console.error(error);
-      Alert.alert('Fehler', 'Verbindung fehlgeschlagen');
+      Alert.alert("Fehler", "Verbindung fehlgeschlagen");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Bluetooth Waage' }} />
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ title: "Bluetooth Waage" }} />
       <TouchableOpacity
         style={[styles.button, isScanning && styles.buttonDisabled]}
         onPress={startScan}
         disabled={isScanning}
       >
         <Text style={styles.buttonText}>
-          {isScanning ? 'Suche läuft...' : 'Nach Geräten suchen'}
+          {isScanning ? "Suche läuft..." : "Nach Geräten suchen"}
         </Text>
       </TouchableOpacity>
 
       <ScrollView style={styles.deviceList}>
-        {devices.map((device) => (
-          <TouchableOpacity
-            key={device.id}
-            style={styles.deviceItem}
-            onPress={() => connectToDevice(device)}
-          >
-            <Text style={styles.deviceName}>{device.name || 'Unbekanntes Gerät'}</Text>
-            <Text style={styles.deviceId}>ID: {device.id}</Text>
-          </TouchableOpacity>
-        ))}
+        {devices
+          .filter((d) => d.isConnectable === true)
+          .map((device) => (
+            <TouchableOpacity
+              key={device.id}
+              style={styles.deviceItem}
+              onPress={() => connectToDevice(device)}
+            >
+              <Text style={styles.deviceName}>
+                {device.localName ||
+                  device.name ||
+                  device.manufacturerData ||
+                  "Unbekanntes Gerät"}
+              </Text>
+              <Text style={styles.deviceId}>ID: {device.id}</Text>
+            </TouchableOpacity>
+          ))}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -95,22 +112,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    paddingBottom: 40,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     padding: 15,
     borderRadius: 8,
     marginBottom: 16,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
   },
   buttonText: {
-    color: '#fff',
-    textAlign: 'center',
+    color: "#fff",
+    textAlign: "center",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   deviceList: {
     flex: 1,
@@ -118,15 +136,15 @@ const styles = StyleSheet.create({
   deviceItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   deviceName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   deviceId: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
-}); 
+});
